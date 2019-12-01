@@ -12,7 +12,7 @@ const { QnACardBuilder } = require('../utils/qnaCardBuilder');
 // Default parameters
 const DefaultThreshold = 0.3;
 const DefaultTopN = 3;
-const DefaultNoAnswer = 'No QnAMaker answers found.';
+const DefaultNoAnswer = "I didn't understand, sorry!";
 
 // Card parameters
 const DefaultCardTitle = 'Did you mean:';
@@ -93,6 +93,8 @@ class QnAMakerBaseDialog extends ComponentDialog {
         // Calling QnAMaker to get response.
         var response = await this._qnaMakerService.getAnswersRaw(stepContext.context, qnaMakerOptions);
 
+
+        
         // Resetting previous query.
         dialogOptions[PreviousQnAId] = -1;
         stepContext.activeDialog.state.options = dialogOptions;
@@ -101,7 +103,18 @@ class QnAMakerBaseDialog extends ComponentDialog {
         var isActiveLearningEnabled = response.activeLearningEnabled;
 
         stepContext.values[QnAData] = response.answers;
+        
+        // ACTIVATE DIALOG
+        // Change the trigger word
 
+        try{
+            if(response.answers[0].answer === "howdy\n\n"){
+                stepContext.context.fillForm = true
+            }
+        }catch(error){
+            // Not actually an error... need to be fixed later
+        }
+        
         // Check if active learning is enabled.
         if (isActiveLearningEnabled && response.answers.length > 0 && response.answers[0].score <= 0.95) {
             response.answers = this._qnaMakerService.getLowScoreVariation(response.answers);
@@ -114,6 +127,7 @@ class QnAMakerBaseDialog extends ComponentDialog {
                 });
                 var qnaDialogResponseOptions = dialogOptions[QnADialogResponseOptions];
                 var message = QnACardBuilder.GetSuggestionCard(suggestedQuestions, qnaDialogResponseOptions.activeLearningCardTitle, qnaDialogResponseOptions.cardNoMatchText);
+                
                 await stepContext.context.sendActivity(message);
 
                 return { status: DialogTurnStatus.waiting };
