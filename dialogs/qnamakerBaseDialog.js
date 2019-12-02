@@ -108,7 +108,7 @@ class QnAMakerBaseDialog extends ComponentDialog {
         // Change the trigger word
 
         try{
-            if(response.answers[0].answer === "howdy\n\n"){
+            if(response.answers[0].answer === "Okay! I'm happy to help you! Let's start!"){
                 stepContext.context.fillForm = true
             }
         }catch(error){

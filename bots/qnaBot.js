@@ -30,8 +30,15 @@ class QnABot extends ActivityHandler {
         this.questions = {
             firstName:"What is your first name?",
             lastName:"What is your last name?",
-            phoneNumber:"What is your phone number?",
-            postalCode:"What is your postalcode?"
+            phoneNumber:"What is your phone number?\n\nExample 040-310101",
+            postalCode:"What is your postalcode?\n\nExample 00150"
+        }
+
+        this.help = {
+            firstName:"",
+            lastName:"",
+            phoneNumber:"",
+            postalCode:""
         }
 
         this.onMessage(async (context, next) => {
@@ -131,4 +138,3 @@ class QnABot extends ActivityHandler {
 
 module.exports.QnABot = QnABot;
 
-// await context.sendActivity(this.userState.name); -> send message
