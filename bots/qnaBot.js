@@ -35,35 +35,43 @@ class QnABot extends ActivityHandler {
         }
 
         this.help = {
-            firstName:"",
-            lastName:"",
-            phoneNumber:"",
-            postalCode:""
+            firstName:"Your calling name",
+            lastName:"Family name",
+            phoneNumber:"You should know this",
+            postalCode:"You can check your postal code from https://www.posti.fi/fi/postinumerohaku"
+        }
+
+        this.dialogs = {
+            greeting:"mörkö says hello",
+            formStop:"Tell me if you want to fill the form again",
+            formReady:"Your form is now ready",
         }
 
         this.onMessage(async (context, next) => {
-            // https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-howto-v4-state?view=azure-bot-service-4.0&tabs=javascript <-- check
+            
             const userProfile = await this.userProfileAccessor.get(context, { firstName:"", lastName:"", phoneNumber:"", postalCode:"" } );
             const dialogData = await this.dialogState.get(context, { fillForm:false, question_key:"" })
             
-            if(dialogData.fillForm){
+            if(dialogData.fillForm && context.activity.text === "stop"){
+                this.resetForm(userProfile)
+                this.resetFillForm(dialogData)
+                this.saveStates(context)
+                await context.sendActivity(this.dialogs.formStop);
+            }else if(dialogData.fillForm && context.activity.text === "help"){
+                await context.sendActivity(this.help[dialogData.question_key]);
+            }else if(dialogData.fillForm){
                 userProfile[dialogData.question_key] = context.activity.text;
                 const next_question = this.nextQuestion(userProfile)
-                if(next_question !== "" && context.activity.text !== "stop"){
+                if(next_question !== ""){
                     await context.sendActivity(this.questions[next_question]);
                     dialogData.question_key = next_question
-                }else if(context.activity.text === "stop"){
-                    this.resetForm(userProfile)
-                    this.resetFillForm(dialogData)
-                    await context.sendActivity("Tell me if you want to fill the form again");
                 }else{
                     this.saveQuestions(userProfile)
                     this.resetForm(userProfile)
                     this.resetFillForm(dialogData)
-                    await context.sendActivity("Your form is now ready");
+                    await context.sendActivity(this.dialogs.formReady);
                 }
                 this.saveStates(context)
-            
             }else{
                 await this.dialog.run(context, this.dialogState);
             }
@@ -76,7 +84,7 @@ class QnABot extends ActivityHandler {
             const membersAdded = context.activity.membersAdded;
             for (let cnt = 0; cnt < membersAdded.length; cnt++) {
                 if (membersAdded[cnt].id !== context.activity.recipient.id) {
-                    await context.sendActivity('mörkö says hello');
+                    await context.sendActivity(this.dialogs.greeting);
                 }
             }
 
@@ -112,6 +120,7 @@ class QnABot extends ActivityHandler {
     }
 
     saveQuestions(userprofile){
+        // Save questions to database
         return null
     }
     
