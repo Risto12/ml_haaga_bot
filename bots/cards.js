@@ -45,7 +45,7 @@ const cards = {
           "body": [
             {
               "type": "TextBlock",
-              "text": "Alright. We will be done in just a few moments. Here at Tapiola we are happy to reimburse you for your cancelled, interrupted, or delayed trip. We also will cover medical expenses incurred during the trip without a limit. The next question is a little bit trickier and we just want to let you have the option to choose for the sake of piece of mind. If something very unfortunate were to happen, like a permanent injury or even death, we can guarantee up to 85 000 euros. Please, click a number value you would like to secure.",
+              "text": "Alright. We will be done in just a few moments. Here at Pasila Life Partners we are happy to reimburse you for your cancelled, interrupted, or delayed trip. We also will cover medical expenses incurred during the trip without a limit. The next question is a little bit trickier and we just want to let you have the option to choose for the sake of piece of mind. If something very unfortunate were to happen, like a permanent injury or even death, we can guarantee up to 85 000 euros. Please, click a number value you would like to secure.",
               "wrap":true
             }
           ],
@@ -126,46 +126,3 @@ const cards = {
 
 }
   module.exports = cards
-/*
-  {
-    "type": "message",
-    "text": "Thank you. Now let us do some estimations. Do you project your trip will be more than 1.5 months long?",
-    "attachments": [
-      {
-        "contentType": "application/vnd.microsoft.card.adaptive",
-        "content": {
-          "type": "AdaptiveCard",
-          "version": "1.0",
-          "body": [
-            {
-              "type": "TextBlock",
-              "text": "Hello World!",
-              "size": "large"
-            },
-            {
-              "type": "TextBlock",
-              "text": "*Sincerely yours,*"
-            },
-            {
-              "type": "TextBlock",
-              "text": "Thank you. Now let us do some estimations. Do you project your trip will be more than 1.5 months long?",
-              "separation": "none"
-            }
-          ],
-          "actions": [
-            {
-              "type": "Action.Submit",
-              "title": "Yes",
-              "data": "yes"
-            },
-            {
-              "type": "Action.Submit",
-              "title": "No",
-              "data": "no"
-            }
-          ]
-        }
-      }
-    ]
-  }
-  */

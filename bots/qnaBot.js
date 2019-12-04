@@ -29,10 +29,10 @@ class QnABot extends ActivityHandler {
         
         this.questions = {
             name:"What is your first name?",
-            birthYear:"Nice to meet you [name]. Welcome to our service. I beieve I can offer you a ver good deal. A few more basic questions. What is your year of birth (example: 1990).",
+            birthYear:"Nice to meet you [name] Welcome to our service. I beieve I can offer you a ver good deal. A few more basic questions. What is your year of birth (example: 1990).",
             phoneNumber:"Lovely. What is [name] your phone number? E.g. 050 123 4567",
             postalCode:"Alright. Many of our customers are life-long clients. What is the zipcode of your primary residence? You can also find it by entering 'help'.",
-            email:"Okay. I also need your email address, [name], to contact you with more information regarding the insurance you are interest in. Please enter your email address now",
+            email:"Okay. I also need your email address, [name] , to contact you with more information regarding the insurance you are interest in. Please enter your email address now",
             duration:cards.duration,
             luggage:"Okay. We offer luggage insurance ranging from 400 to 2000 euros. And there is no deductible! Please enter the number from 400 to 2000. You can also enter “0” if you wish not to insure your luggage.",
             medical:cards.medical,
@@ -85,7 +85,8 @@ class QnABot extends ActivityHandler {
                 userProfile[dialogData.question_key] = context.activity.text;
                 const next_question = this.nextQuestion(userProfile)
                 if(next_question !== ""){
-                    await context.sendActivity(this.questions[next_question]);
+                    const name_added = typeof(this.questions[next_question]) === 'object' ? this.questions[next_question] : this.replaceQuestionsName(this.questions[next_question], userProfile.name)
+                    await context.sendActivity(name_added);
                     dialogData.question_key = next_question
                 }else{
                     await context.sendActivity(this.dialogs.formReady);
@@ -94,7 +95,6 @@ class QnABot extends ActivityHandler {
                     this.saveQuestions(userProfile)
                     this.resetForm(userProfile)
                     this.resetFillForm(dialogData)
-
                 }
                 this.saveStates(context)
             }else{
@@ -170,6 +170,10 @@ class QnABot extends ActivityHandler {
     async urlCreator(userProfile){
         const u = userProfile
         return `http://vesanto.me:8071/readyform.html?email=${u.email}&name=${u.name}&phoneNumber=${u.phoneNumber}&postalCode=${u.postalCode}&luggage=${u.luggage}&birthYear=${u.birthYear}&duration=${u.duration}&kela=${u.kela}&medical=${u.medical}`
+    }
+
+    replaceQuestionsName(question, name){
+        return question.replace("[name]", name)
     }
 
 }
