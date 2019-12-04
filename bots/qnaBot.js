@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
+const cards = require('./cards')
 const { ActivityHandler } = require('botbuilder');
 
 /**
@@ -19,7 +19,7 @@ class QnABot extends ActivityHandler {
         if (!conversationState) throw new Error('[QnABot]: Missing parameter. conversationState is required');
         if (!userState) throw new Error('[QnABot]: Missing parameter. userState is required');
         if (!dialog) throw new Error('[QnABot]: Missing parameter. dialog is required');
-
+        
         this.conversationState = conversationState;
         this.userState = userState;
         this.dialog = dialog;
@@ -28,28 +28,50 @@ class QnABot extends ActivityHandler {
         this.userProfileAccessor = userState.createProperty("userProfile");
         
         this.questions = {
-            firstName:"What is your first name?",
-            lastName:"What is your last name?",
-            phoneNumber:"What is your phone number?\n\nExample 040-310101",
-            postalCode:"What is your postalcode?\n\nExample 00150"
+            name:"What is your first name?",
+            birthYear:"Nice to meet you [name]. Welcome to our service. I beieve I can offer you a ver good deal. A few more basic questions. What is your year of birth (example: 1990).",
+            phoneNumber:"Lovely. What is [name] your phone number? E.g. 050 123 4567",
+            postalCode:"Alright. Many of our customers are life-long clients. What is the zipcode of your primary residence? You can also find it by entering 'help'.",
+            email:"Okay. I also need your email address, [name], to contact you with more information regarding the insurance you are interest in. Please enter your email address now",
+            duration:cards.duration,
+            luggage:"Okay. We offer luggage insurance ranging from 400 to 2000 euros. And there is no deductible! Please enter the number from 400 to 2000. You can also enter “0” if you wish not to insure your luggage.",
+            medical:cards.medical,
+            kela:cards.kela,
         }
 
         this.help = {
-            firstName:"Your calling name",
-            lastName:"Family name",
+            name:"Your calling name",
+            birthYear:"Family name",
             phoneNumber:"You should know this",
-            postalCode:"You can check your postal code from https://www.posti.fi/fi/postinumerohaku"
+            postalCode:"You can check your postal code from https://www.posti.fi/fi/postinumerohaku",
+            email:"Example matti@gmail.com",
+            duration:"Click yes or No",
+            luggage:"More information https://www.notreal/fi/luggage",
+            medical:"test",
+            kela:"test",
         }
 
         this.dialogs = {
-            greeting:"mörkö says hello",
+            greeting:"Thank you for waking me up! I am grabbing coffee now. Whenever you are ready to get an estimate for your travel insurance, just type in 'form'.",
             formStop:"Tell me if you want to fill the form again",
-            formReady:"Your form is now ready",
+            formReady:"Now the last steps. First, in the link below you can check if your form has been filled in correctly. Then we will take you to log in with your bank credentials for us to confirm your personal identity and we will send you more details by email. You can also call us at 09 453 3000 24/7 for any more information",
+            bye:"It was very nice meeting you and I hope you will have a productive and entertaining trip! See you later [name]! Kind regards, always travel safe. Your Olavi"
         }
 
         this.onMessage(async (context, next) => {
             
-            const userProfile = await this.userProfileAccessor.get(context, { firstName:"", lastName:"", phoneNumber:"", postalCode:"" } );
+            const userProfile = await this.userProfileAccessor.get(context, 
+                { 
+                    name:"", 
+                    birthYear:"", 
+                    phoneNumber:"", 
+                    postalCode:"", 
+                    email:"" ,
+                    duration:"",
+                    luggage:"",
+                    medical:"",
+                    kela:"",
+                });
             const dialogData = await this.dialogState.get(context, { fillForm:false, question_key:"" })
             
             if(dialogData.fillForm && context.activity.text === "stop"){
@@ -97,8 +119,8 @@ class QnABot extends ActivityHandler {
             if(context.fillForm){
                 const dialogData = await this.dialogState.get(context, {fillForm:false, question:""})
                 dialogData.fillForm = true
-                dialogData.question_key = "firstName"
-                await context.sendActivity(this.questions.firstName);
+                dialogData.question_key = "name"
+                await context.sendActivity(this.questions.name);
             }
             this.saveStates(context)
             await next();
