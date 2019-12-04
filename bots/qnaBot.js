@@ -47,8 +47,8 @@ class QnABot extends ActivityHandler {
             email:"Example matti@gmail.com",
             duration:"Click yes or No",
             luggage:"More information https://www.notreal/fi/luggage",
-            medical:"test",
-            kela:"test",
+            medical:"More information https://www.notreal/fi/medical",
+            kela:"More information https://www.notreal/fi/kela",
         }
 
         this.dialogs = {
@@ -88,10 +88,13 @@ class QnABot extends ActivityHandler {
                     await context.sendActivity(this.questions[next_question]);
                     dialogData.question_key = next_question
                 }else{
+                    await context.sendActivity(this.dialogs.formReady);
+                    await context.sendActivity(await this.urlCreator(userProfile));
+                    await context.sendActivity(this.dialogs.bye);
                     this.saveQuestions(userProfile)
                     this.resetForm(userProfile)
                     this.resetFillForm(dialogData)
-                    await context.sendActivity(this.dialogs.formReady);
+
                 }
                 this.saveStates(context)
             }else{
@@ -164,6 +167,10 @@ class QnABot extends ActivityHandler {
         await this.userState.saveChanges(context, false);
     }
 
+    async urlCreator(userProfile){
+        const u = userProfile
+        return `http://vesanto.me:8071/readyform.html?email=${u.email}&name=${u.name}&phoneNumber=${u.phoneNumber}&postalCode=${u.postalCode}&luggage=${u.luggage}&birthYear=${u.birthYear}&duration=${u.duration}&kela=${u.kela}&medical=${u.medical}`
+    }
 
 }
 
