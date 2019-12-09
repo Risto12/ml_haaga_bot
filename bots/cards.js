@@ -20,12 +20,12 @@ const cards = {
               {
                 "type": "Action.Submit",
                 "title": "Yes",
-                "data": true
+                "data": "true"
               },
               {
                 "type": "Action.Submit",
                 "title": "No",
-                "data": false
+                "data": "false"
               }
             ]
           }
@@ -111,18 +111,40 @@ const cards = {
               {
                 "type": "Action.Submit",
                 "title": "Yes",
-                "data": true
+                "data": "true"
               },
               {
                 "type": "Action.Submit",
                 "title": "No",
-                "data": false
+                "data": "false"
               }
             ]
           }
         }
       ]
     },
+    url:function (formUrl) {
+      return {
+        "type": "message",
+        "text": "",
+        "attachments": [
+          {
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "content": {
+              "type": "AdaptiveCard",
+              "version": "1.0",
+              "actions": [
+                {
+                  "type": "Action.OpenUrl",
+                  "title": "Form link",
+                  "url": formUrl
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
 
 }
   module.exports = cards

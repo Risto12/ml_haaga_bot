@@ -28,21 +28,21 @@ class QnABot extends ActivityHandler {
         this.userProfileAccessor = userState.createProperty("userProfile");
         
         this.questions = {
-            name:"What is your first name?",
-            birthYear:"Nice to meet you [name] Welcome to our service. I beieve I can offer you a ver good deal. A few more basic questions. What is your year of birth (example: 1990).",
-            phoneNumber:"Lovely. What is [name] your phone number? E.g. 050 123 4567",
-            postalCode:"Alright. Many of our customers are life-long clients. What is the zipcode of your primary residence? You can also find it by entering 'help'.",
-            email:"Okay. I also need your email address, [name] , to contact you with more information regarding the insurance you are interest in. Please enter your email address now",
+            name:"What is your name?",
+            birthYear:"Happy to meet you [name] , What is your birth year?",
+            phoneNumber:"What is your phonenumber?",
+            postalCode:"Please enter postal code",
+            email:"Please enter email",
             duration:cards.duration,
-            luggage:"Okay. We offer luggage insurance ranging from 400 to 2000 euros. And there is no deductible! Please enter the number from 400 to 2000. You can also enter “0” if you wish not to insure your luggage.",
+            luggage:"Insurance coverage for luggage (0-400)",
             medical:cards.medical,
             kela:cards.kela,
         }
 
         this.help = {
             name:"Your calling name",
-            birthYear:"Family name",
-            phoneNumber:"You should know this",
+            birthYear:"Year you were born in format of yyyy",
+            phoneNumber:"Informat +358...",
             postalCode:"You can check your postal code from https://www.posti.fi/fi/postinumerohaku",
             email:"Example matti@gmail.com",
             duration:"Click yes or No",
@@ -52,10 +52,10 @@ class QnABot extends ActivityHandler {
         }
 
         this.dialogs = {
-            greeting:"Thank you for waking me up! I am grabbing coffee now. Whenever you are ready to get an estimate for your travel insurance, just type in 'form'.",
-            formStop:"Tell me if you want to fill the form again",
-            formReady:"Now the last steps. First, in the link below you can check if your form has been filled in correctly. Then we will take you to log in with your bank credentials for us to confirm your personal identity and we will send you more details by email. You can also call us at 09 453 3000 24/7 for any more information",
-            bye:"It was very nice meeting you and I hope you will have a productive and entertaining trip! See you later [name]! Kind regards, always travel safe. Your Olavi"
+            greeting:"Hello there. You can talk to me if you want. Enter fill form to fill the form on the webpage",
+            formStop:"Form filling has stopped",
+            formReady:"Form is ready",
+            bye:"See you later alligator"
         }
 
         this.onMessage(async (context, next) => {
@@ -72,31 +72,37 @@ class QnABot extends ActivityHandler {
                     medical:"",
                     kela:"",
                 });
-            const dialogData = await this.dialogState.get(context, { fillForm:false, question_key:"" })
+            const dialogData = await this.dialogState.get(context, { fillForm: false, questionKey: "" })
             
-            if(dialogData.fillForm && context.activity.text === "stop"){
-                this.resetForm(userProfile)
-                this.resetFillForm(dialogData)
-                this.saveStates(context)
-                await context.sendActivity(this.dialogs.formStop);
-            }else if(dialogData.fillForm && context.activity.text === "help"){
-                await context.sendActivity(this.help[dialogData.question_key]);
-            }else if(dialogData.fillForm){
-                userProfile[dialogData.question_key] = context.activity.text;
-                const next_question = this.nextQuestion(userProfile)
-                if(next_question !== ""){
-                    const name_added = typeof(this.questions[next_question]) === 'object' ? this.questions[next_question] : this.replaceQuestionsName(this.questions[next_question], userProfile.name)
-                    await context.sendActivity(name_added);
-                    dialogData.question_key = next_question
-                }else{
-                    await context.sendActivity(this.dialogs.formReady);
-                    await context.sendActivity(await this.urlCreator(userProfile));
-                    await context.sendActivity(this.dialogs.bye);
-                    this.saveQuestions(userProfile)
-                    this.resetForm(userProfile)
-                    this.resetFillForm(dialogData)
-                }
-                this.saveStates(context)
+            if(dialogData.fillForm){
+                switch(context.activity.text) {
+                    case "stop":
+                        this.resetForm(userProfile)
+                        this.resetFillForm(dialogData)
+                        this.saveStates(context)
+                        await context.sendActivity(this.dialogs.formStop);
+                        break;
+                    case "help":
+                        await context.sendActivity(this.help[dialogData.questionKey]);
+                        break;
+                    default:
+                        this.saveAnswerToState(userProfile, dialogData.questionKey, context.activity.text)
+                        const nextQuestion = this.nextQuestion(userProfile)
+                        if(nextQuestion !== ""){
+                            const nextQuestion_checked = this.isObject(nextQuestion) ? this.questions[nextQuestion] : this.addNameToQuestion(this.questions[nextQuestion], userProfile.name)
+                            await context.sendActivity(nextQuestion_checked);
+                            dialogData.questionKey = nextQuestion
+                        }else{
+                            await context.sendActivity(this.dialogs.formReady);
+                            await context.sendActivity(await this.createUrl(userProfile));
+                            await context.sendActivity(this.dialogs.bye);
+                            this.saveQuestions(userProfile)
+                            this.resetForm(userProfile)
+                            this.resetFillForm(dialogData)
+                        }
+                        this.saveStates(context)
+                        break;
+                } 
             }else{
                 await this.dialog.run(context, this.dialogState);
             }
@@ -122,7 +128,7 @@ class QnABot extends ActivityHandler {
             if(context.fillForm){
                 const dialogData = await this.dialogState.get(context, {fillForm:false, question:""})
                 dialogData.fillForm = true
-                dialogData.question_key = "name"
+                dialogData.questionKey = "name"
                 await context.sendActivity(this.questions.name);
             }
             this.saveStates(context)
@@ -167,13 +173,20 @@ class QnABot extends ActivityHandler {
         await this.userState.saveChanges(context, false);
     }
 
-    async urlCreator(userProfile){
-        const u = userProfile
-        return `http://vesanto.me:8071/readyform.html?email=${u.email}&name=${u.name}&phoneNumber=${u.phoneNumber}&postalCode=${u.postalCode}&luggage=${u.luggage}&birthYear=${u.birthYear}&duration=${u.duration}&kela=${u.kela}&medical=${u.medical}`
+    async createUrl(userProfile){
+        return cards.url(`http://vesanto.me:8071/readyform.html?email=${userProfile.email}&name=${userProfile.name}&phoneNumber=${userProfile.phoneNumber}&postalCode=${userProfile.postalCode}&luggage=${userProfile.luggage}&birthYear=${userProfile.birthYear}&duration=${userProfile.duration}&kela=${userProfile.kela}&medical=${userProfile.medical}`)
     }
 
-    replaceQuestionsName(question, name){
+    addNameToQuestion(question, name){
         return question.replace("[name]", name)
+    }
+
+    saveAnswerToState(userProfile, questionKey, answer){
+        userProfile[questionKey] = answer;
+    }
+
+    isObject(nextQuestion){
+        return typeof(this.questions[nextQuestion]) === 'object'
     }
 
 }
